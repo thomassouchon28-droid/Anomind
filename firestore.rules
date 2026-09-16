@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Ouvert en lecture/écriture à quiconque a le lien de l'appli.
+    // Il n'y a pas de compte utilisateur dans ce jeu (juste un identifiant
+    // de navigateur généré localement), donc il n'y a pas de notion
+    // d'utilisateur "authentifié" à vérifier ici.
+    //
+    // Acceptable pour un lien partagé à un groupe restreint (4 équipes,
+    // le temps d'une partie). À ne pas laisser tel quel si l'URL venait
+    // à être largement diffusée : n'importe qui avec le lien pourrait
+    // alors aussi écrire dans la partie.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
