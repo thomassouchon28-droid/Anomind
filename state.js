@@ -14,7 +14,27 @@ const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
 function store(k,v){ try{ v===undefined ? localStorage.removeItem(k) : localStorage.setItem(k,v);}catch(e){} }
 function loadLS(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-function clientId(){ let id=loadLS("helios_client"); if(!id){ id=uid(); store("helios_client", id); } return id; }
+/* Identifiant de session, retenu en mémoire pour toute la durée de la page.
+   Certains navigateurs refusent le stockage local (mode restreint, cookies
+   bloqués) : sans ce cache, l'identifiant changeait à chaque appel, et le
+   joueur était éjecté de son équipe dès le premier rafraîchissement — donc
+   dès qu'un autre joueur agissait. */
+let _cid = null;
+function clientId(){
+  if(_cid) return _cid;
+  _cid = loadLS("helios_client") || uid();
+  store("helios_client", _cid);
+  return _cid;
+}
+/* Le stockage local sert aussi à retrouver son équipe après un rechargement.
+   S'il est indisponible, on garde l'équipe en mémoire pour la session en cours. */
+let _memTeam = null;
+function saveTeam(id){ _memTeam = id; store("helios_team", id===undefined ? undefined : id); }
+function loadTeam(){ return loadLS("helios_team") || _memTeam; }
+function stockageDispo(){
+  try{ localStorage.setItem("helios_test","1"); localStorage.removeItem("helios_test"); return true; }
+  catch(e){ return false; }
+}
 
 async function sha(s){
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(SALT+"|"+s));

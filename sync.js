@@ -31,7 +31,7 @@ function subDoc(path, apply){
 }
 async function start(){
   wire(); buildGate();
-  const saved = loadLS("helios_team");
+  const saved = loadTeam();
   if(saved && team(saved)){ S.me=saved; }
   let db=null;
   try{ db = await connectDb(); }catch(e){ db=null; }
@@ -54,7 +54,9 @@ async function start(){
         + "Un rechargement de la page rétablit en général le flux.";
     } else {
       el_.className="statusline";
-      el_.textContent="Session partagée active — synchronisé il y a "+age+" s.";
+      el_.textContent="Session partagée active — synchronisé il y a "+age+" s."
+        + (stockageDispo() ? "" : " Attention : ce navigateur n'autorise pas la mémorisation locale — "
+            + "recharger la page vous fera quitter votre équipe.");
     }
   }, 1000);
   ["ledger","decls","access","chat","guesses","found","claims"].forEach(c=>sub(c,c));
@@ -67,14 +69,14 @@ async function start(){
     // Éjection immédiate, sans attendre le prochain rendu : pendant ce court
     // intervalle, un joueur pourrait sinon encore agir alors que la
     // réinitialisation a déjà commencé.
-    if(S.phase==="resetting" && S.me){ S.me=null; store("helios_team", undefined); }
+    if(S.phase==="resetting" && S.me){ S.me=null; saveTeam(undefined); }
   });
   if(S.me){
     // Réservation atomique, comme à la sélection : un simple lire-puis-écrire
     // laisserait deux onglets qui redémarrent en même temps se croire tous
     // deux propriétaires de la même équipe.
     const lease = await claimSlot(S.db.doc("claims/"+S.me), clientId());
-    if(!lease.acquired){ S.me = null; store("helios_team", undefined); }
+    if(!lease.acquired){ S.me = null; saveTeam(undefined); }
   }
   renderAll();
 }

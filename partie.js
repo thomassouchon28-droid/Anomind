@@ -77,7 +77,7 @@ function reconcileOwnership(){
   if(!S.db || !S.me) return;
   const c = S.claims.find(x=>x._id===S.me);
   if(c && c.holder && c.holder!==clientId()){
-    S.me=null; store("helios_team", undefined);
+    S.me=null; saveTeam(undefined);
     toast("Votre équipe a été reprise par un autre joueur.");
   }
 }
@@ -99,7 +99,7 @@ function renderGate(){
   const g = $("#gate");
   if(S.db && S.phase==="resetting"){
     // Réinitialisation en cours : tout le monde sort et personne n'entre.
-    if(S.me){ S.me=null; store("helios_team", undefined); }
+    if(S.me){ S.me=null; saveTeam(undefined); }
     g.hidden=false; $("#gatePickBox").hidden=false; $("#lobbyBox").hidden=true;
     buildGate();
     return;
@@ -150,7 +150,7 @@ async function launchGame(){
    réinitialisation efface les noms. */
 function leaveTeam(){
   const old = S.me;
-  store("helios_team", undefined); S.me=null; S.lastFb=null;
+  saveTeam(undefined); S.me=null; S.lastFb=null;
   $("#anoFeedback").innerHTML="";
   renderAll();
   if(S.db && old){ S.db.doc("claims/"+old).update({holder:null}).catch(()=>{}); }
@@ -177,7 +177,7 @@ async function pickTeam(id){
       buildGate(); return;
     }
   }
-  S.me=id; store("helios_team", id);
+  S.me=id; saveTeam(id);
   S.lastFb=null; $("#anoFeedback").innerHTML="";
   S.chan="general";
   renderChanBar(); renderAll();
