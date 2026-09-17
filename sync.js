@@ -53,8 +53,13 @@ async function start(){
         + "la session bascule alors sur un rafraîchissement périodique d'environ 30 secondes. "
         + "Un rechargement de la page rétablit en général le flux.";
     } else {
-      el_.className="statusline";
-      el_.textContent="Session partagée active — synchronisé il y a "+age+" s."
+      el_.className="statusline"+(versionsDivergentes()?" off":"");
+      el_.textContent=(versionsDivergentes()
+          ? "ATTENTION : des joueurs utilisent une version différente du dossier — "
+            + "les règles ne sont pas les mêmes pour tous. Demandez-leur de recharger "
+            + "la page en vidant le cache (Ctrl+Maj+R). "
+          : "")
+        +"Session partagée active — synchronisé il y a "+age+" s."
         + (stockageDispo() ? "" : " Attention : ce navigateur n'autorise pas la mémorisation locale — "
             + "recharger la page vous fera quitter votre équipe.");
     }
@@ -75,7 +80,7 @@ async function start(){
     // Réservation atomique, comme à la sélection : un simple lire-puis-écrire
     // laisserait deux onglets qui redémarrent en même temps se croire tous
     // deux propriétaires de la même équipe.
-    const lease = await claimSlot(S.db.doc("claims/"+S.me), clientId());
+    const lease = await claimSlot(S.db.doc("claims/"+S.me), clientId(), ruleFingerprint());
     if(!lease.acquired){ S.me = null; saveTeam(undefined); }
   }
   renderAll();

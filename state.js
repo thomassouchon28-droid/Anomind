@@ -31,6 +31,23 @@ function clientId(){
 let _memTeam = null;
 function saveTeam(id){ _memTeam = id; store("helios_team", id===undefined ? undefined : id); }
 function loadTeam(){ return loadLS("helios_team") || _memTeam; }
+/* Empreinte des règles en vigueur chez ce joueur. Chaque navigateur applique
+   SA copie de data.js : si l'un d'eux garde une ancienne version en cache, les
+   barèmes divergent en silence au sein d'une même partie. On publie donc cette
+   empreinte et on alerte dès qu'elle diffère d'un joueur à l'autre. */
+function ruleFingerprint(){
+  const base = [CAPITAL, COUT_DECL, MALUS_FAUX, MALUS_DEVINE, COUT_MSG, COOLDOWN, MIN_JUSTIF,
+    DMG_SOCLE.majeure, DMG_SOCLE.significative, DMG_SOCLE.mineure, DMG_QUALIF, DMG_PLAFOND,
+    KEY_LINE.length, KEY_CAT.length, KEY_NAT.length, KEY_INC.length,
+    DOCS.length, KEY_LINE.map(k=>k.h+k.p).join("")].join("|");
+  let h = 5381;
+  for(let i=0;i<base.length;i++) h = ((h*33) ^ base.charCodeAt(i)) >>> 0;
+  return h.toString(16);
+}
+function versionsDivergentes(){
+  const moi = ruleFingerprint();
+  return activeClaims().some(c => c.fp && c.fp !== moi);
+}
 function stockageDispo(){
   try{ localStorage.setItem("helios_test","1"); localStorage.removeItem("helios_test"); return true; }
   catch(e){ return false; }

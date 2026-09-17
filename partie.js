@@ -171,7 +171,7 @@ async function pickTeam(id){
   if(already && already.holder && already.holder!==clientId()) return;
   document.querySelectorAll("#gatePick button").forEach(b=>b.disabled=true);
   if(S.db){
-    const lease = await claimSlot(S.db.doc("claims/"+id), clientId());
+    const lease = await claimSlot(S.db.doc("claims/"+id), clientId(), ruleFingerprint());
     if(!lease.acquired){
       toast("Cette équipe vient d'être prise par quelqu'un d'autre.");
       buildGate(); return;
