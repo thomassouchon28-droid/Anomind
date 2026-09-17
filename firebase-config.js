@@ -28,7 +28,7 @@ function connectDb(){ return FIRESTORE; }
    obtient le même résultat ("prendre le document seulement s'il est encore
    libre") avec une transaction Firestore classique.
    ------------------------------------------------------------------------ */
-async function claimSlot(ref, holder){
+async function claimSlot(ref, holder, fp){
   try{
     let acquired = false;
     await FIRESTORE.runTransaction(async tx=>{
@@ -36,7 +36,7 @@ async function claimSlot(ref, holder){
       if(snap.exists && snap.data().holder && snap.data().holder!==holder){
         acquired = false; return;
       }
-      tx.set(ref, {holder, ts: Date.now()}, {merge:true});
+      tx.set(ref, {holder, ts: Date.now(), fp}, {merge:true});
       acquired = true;
     });
     return {acquired};
