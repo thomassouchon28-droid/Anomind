@@ -26,8 +26,11 @@ function renderMe(){
 }
 
 function renderBoard(){
-  const bar = $("#board"); bar.innerHTML="";
+  const bar = $("#board");
   const ranked = activeTeams().map(t=>({t, p:pts(t.id)})).sort((a,b)=>b.p-a.p);
+  const sigB = JSON.stringify([S.me, ranked.map(r=>[r.t.id, r.p, teamName(r.t.id), !holderOf(r.t.id)])]);
+  if(bar.dataset.sig === sigB) return;
+  bar.innerHTML=""; bar.dataset.sig = sigB;
   ranked.forEach(r=>{
     // équipe engagée dans la partie mais dont plus personne ne tient la place :
     // elle reste en jeu (points, documents, cibles) et n'est que signalée.
@@ -93,10 +96,24 @@ function orderedDocs(){
   return mine.concat(rest);
 }
 
+/* Reconstruire un panneau entier remplace ses boutons par des neufs. Comme un
+   rendu est déclenché par l'action de n'importe quel joueur, un bouton pouvait
+   disparaître sous le doigt de quelqu'un au moment précis où il cliquait : le
+   clic ne portait alors sur rien. On ne reconstruit donc que si ce qui est
+   affiché a réellement changé. */
+function rendreSiChange(node, sig, build){
+  if(node.dataset.sig === sig) return false;
+  node.innerHTML = "";
+  build();
+  node.dataset.sig = sig;
+  return true;
+}
 function renderDocList(){
-  const list = $("#docList"); list.innerHTML="";
+  const list = $("#docList");
+  const sig = JSON.stringify([S.me, S.sel, orderedDocs().map(d=>[d.id, hasDoc(d.id,S.me), ownerOf(d.id),
+    S.guesses.filter(g=>g.team===S.me && g.docId===d.id).length])]);
   let owned=0;
-  orderedDocs().forEach(d=>{
+  const build = ()=>{ orderedDocs().forEach(d=>{
     const ok = hasDoc(d.id, S.me);
     if(ok) owned++;
     const b = el("button","doc-i"+(ok?"":" locked"));
@@ -116,14 +133,22 @@ function renderDocList(){
     b.append(m);
     b.onclick = ()=>{ S.sel = d.id; renderDocList(); renderReader(); };
     list.append(b);
-  });
+  }); };
+  if(!rendreSiChange(list, sig, build)) orderedDocs().forEach(d=>{ if(hasDoc(d.id,S.me)) owned++; });
   $("#docCount").textContent = owned+" document"+(owned>1?"s":"")+" en votre possession sur "+DOCS.length;
 }
 
 function renderReader(){
-  const r = $("#reader"); r.innerHTML="";
+  const r = $("#reader");
   const d = docById(S.sel);
-  if(!d) return;
+  if(!d){ r.innerHTML=""; r.dataset.sig=""; return; }
+  const sig = JSON.stringify([S.me, S.sel, hasDoc(d.id,S.me), playable(), over(),
+    activeTeams().map(t=>[t.id, teamName(t.id)]),
+    S.decls.filter(x=>x.team===S.me && x.docId===d.id).map(x=>[x.ligne,x.verdict]),
+    S.found.filter(f=>f.docId===d.id).map(f=>f.ligne),
+    S.guesses.filter(g=>g.team===S.me && g.docId===d.id).map(g=>g.guess)]);
+  if(r.dataset.sig === sig) return;
+  r.innerHTML=""; r.dataset.sig = sig;
   const head = el("header");
   const h = el("div"); h.style.flex="1 1 200px";
   h.append(el("h2",null,d.titre));
