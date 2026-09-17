@@ -3,8 +3,8 @@
 const CAPITAL = 400;        // dotation de départ de chaque équipe
 const COUT_DECL = 5;        // coût de dépôt d'un relevé d'anomalie
 const MALUS_FAUX = 15;      // malus supplémentaire si la ligne est saine
-const MALUS_DEVINE = 25;    // malus si l'on se trompe de détenteur
-const COUT_MSG = 2;         // coût d'un message envoyé
+const MALUS_DEVINE = 50;    // malus si l'on se trompe de détenteur
+const COUT_MSG = 5;         // coût d'un message envoyé
 const COOLDOWN = 30000;     // délai minimum entre deux relevés (ms)
 const MIN_JUSTIF = 60;      // caractères minimum de justification
 
